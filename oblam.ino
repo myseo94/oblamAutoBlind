@@ -6,9 +6,12 @@
     server_ip is the IP address of the ESP8266 module, will be
     printed to Serial when the module is connected.
 */
-
+#include <OneWire.h>
 #include <ESP8266WiFi.h>
 #include <Servo.h>
+#include <DallasTemperature.h>
+
+#define ONE_WIRE_BUS D3
 
 const char* ssid = "testing";
 const char* password = "03123456";
@@ -30,6 +33,22 @@ int prev = 1;
 // specify the port to listen on as an argument
 WiFiServer server(3000);
 Servo servo;
+
+//set onewire
+OneWire oneWire(ONE_WIRE_BUS);
+DallasTemperature DS18B20(&oneWire);
+char temperatureString[6];
+
+float getTemperature() {
+  float temp;
+  do {
+    DS18B20.requestTemperatures(); 
+    temp = DS18B20.getTempCByIndex(0);
+    delay(100);
+  } while (temp == 85.0 || temp == (-127.0));
+  return temp;
+}
+
 
 void setup() {
   servo.attach(servoPin);
@@ -125,6 +144,13 @@ void loop() {
   if ( db_timer_end - db_timer_end == 3000 ) // three seconds period for demo-day
     db_check_flag = 1;
     */
+    
+    //temperature
+    float temperature = getTemperature();
+    dtostrf(temperature, 2, 2, temperatureString);
+    //Serial.println(temperatureString);
+    
+    
    db_check_flag = 1; // test
     
   // Check if a client has connected
